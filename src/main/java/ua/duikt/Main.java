@@ -13,8 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xwpf.usermodel.*;
 import ua.duikt.entity.Bachelor;
 import ua.duikt.repository.BachelorRepository;
+import ua.duikt.util.RunSnapshot;
 
 import java.io.FileOutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -86,10 +88,13 @@ public class Main extends Application {
         if (runs == null || runs.isEmpty()) return;
 
         StringBuilder fullTextBuilder = new StringBuilder();
+        List<RunSnapshot> styleSnapshots = new ArrayList<>();
+
         for (XWPFRun run : runs) {
             String text = run.getText(0);
             if (text != null) {
                 fullTextBuilder.append(text);
+                styleSnapshots.add(new RunSnapshot(run));
             }
         }
 
@@ -105,21 +110,12 @@ public class Main extends Application {
         }
 
         XWPFRun newRun = paragraph.createRun();
-
-        XWPFRun sourceRun = runs.get(0);
-
-        if (sourceRun.getFontFamily() != null) {
-            newRun.setFontFamily(sourceRun.getFontFamily());
+        if (!styleSnapshots.isEmpty()) {
+            styleSnapshots.get(0).applyTo(newRun);
         } else {
             newRun.setFontFamily("Times New Roman");
+            newRun.setFontSize(14);
         }
-
-        if (sourceRun.getFontSizeAsDouble() != null) {
-            newRun.setFontSize(sourceRun.getFontSizeAsDouble());
-        }
-        newRun.setBold(sourceRun.isBold());
-        newRun.setItalic(sourceRun.isItalic());
-
         newRun.setText(replaced);
     }
 
